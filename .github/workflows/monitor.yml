@@ -1,4 +1,4 @@
-name: Web Health Monitor
+name: Check Web Broken
 
 on:
   workflow_dispatch:
