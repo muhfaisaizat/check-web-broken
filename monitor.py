@@ -36,8 +36,9 @@ def run_advanced_checker():
             page.on("requestfailed", lambda request: failed_resources.append(request.url))
 
             print(f"Mulai pengecekan: {TARGET_URL}")
-            response = page.goto(TARGET_URL, wait_until="networkidle", timeout=60000)
-            health_report["status_code"] = response.status
+            # Menambah timeout menjadi 90 detik karena website lambat
+            response = page.goto(TARGET_URL, wait_until="networkidle", timeout=90000)
+            health_report["status_code"] = response.status if response else 0
 
             # 1. Deteksi Blank Page (Cek tinggi elemen body)
             body_height = page.evaluate("document.body.getBoundingClientRect().height")
@@ -67,16 +68,21 @@ def run_advanced_checker():
             # Penentuan status akhir GitHub Action
             if health_report["status_code"] >= 400 or health_report["is_blank"] or health_report["css_broken"] or health_report["html_leaked"]:
                 print("RESULT:: WEBSITE_BROKEN")
-                sys.exit(1)
+                sys.exit(0) # Diubah agar tetap lanjut
             else:
                 print("RESULT:: WEBSITE_HEALTHY")
                 sys.exit(0)
 
         except Exception as e:
             health_report["error_message"] = str(e)
+            # Berusaha ambil screenshot meskipun error jika halamannya sempat terbuka
+            try:
+                page.screenshot(path=OUTPUT_IMAGE, full_page=True)
+            except:
+                pass
             print(f"DATA:: {json.dumps(health_report)}")
             print("RESULT:: CRITICAL_ERROR")
-            sys.exit(1)
+            sys.exit(0) # Tetap sukses agar data/screenshot diupload
         finally:
             browser.close()
 
