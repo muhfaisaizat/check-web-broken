@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 from playwright.sync_api import sync_playwright
+from playwright_stealth import Stealth
 
 # --- KONFIGURASI DINAMIS ---
 parser = argparse.ArgumentParser()
@@ -16,9 +17,15 @@ OUTPUT_IMAGE = "screenshot.png"
 def run_advanced_checker():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
-        # Setup layar desktop standar
-        context = browser.new_context(viewport={'width': 1280, 'height': 800})
+        # Setup context dengan User-Agent asli untuk melewati bot protection
+        context = browser.new_context(
+            viewport={'width': 1280, 'height': 800},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        )
         page = context.new_page()
+        
+        # Aktifkan Stealth Mode
+        Stealth().apply_stealth_sync(page)
 
         # Inisialisasi laporan untuk n8n
         health_report = {
@@ -36,8 +43,9 @@ def run_advanced_checker():
             page.on("requestfailed", lambda request: failed_resources.append(request.url))
 
             print(f"Mulai pengecekan: {TARGET_URL}")
-            # Menambah timeout menjadi 90 detik karena website lambat
-            response = page.goto(TARGET_URL, wait_until="networkidle", timeout=90000)
+            # Menggunakan domcontentloaded + manual wait untuk menghindari jebakan networkidle Cloudflare
+            response = page.goto(TARGET_URL, wait_until="domcontentloaded", timeout=90000)
+            page.wait_for_timeout(5000) # Jeda tambahan untuk memuat konten dinamis
             health_report["status_code"] = response.status if response else 0
 
             # 1. Deteksi Blank Page (Cek tinggi elemen body)
