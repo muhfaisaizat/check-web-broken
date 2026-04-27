@@ -7,6 +7,8 @@ on:
         description: 'URL yang akan dicek'
         required: true
         default: 'https://portoqu.onrender.com/'
+  repository_dispatch:
+      types: [run-check]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -39,3 +41,13 @@ jobs:
           name: health-screenshot
           path: screenshot.png
           retention-days: 1
+
+      # TAMBAHKAN INI: Kirim hasil ke Webhook n8n
+      - name: Send Result to n8n Webhook
+        if: always()
+        run: |
+          TARGET_URL="${{ github.event.inputs.target_url }}"
+          curl -X POST https://sync.impacta.id/webhook-test/github-screenshot \
+            -F "status=completed" \
+            -F "target_url=$TARGET_URL" \
+            -F "image=@screenshot.png"
