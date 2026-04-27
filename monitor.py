@@ -73,7 +73,8 @@ def run_advanced_checker():
                 
                 # Tambahkan User-Agent browser agar tidak diblokir Cloudflare saat POST
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "X-Github-Token": "gsadadvv95rsadf62jsabd"
                 }
 
                 res = requests.post(WEBHOOK_URL, data=payload, files=files, headers=headers)
