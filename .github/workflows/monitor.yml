@@ -48,6 +48,7 @@ jobs:
         run: |
           TARGET_URL="${{ github.event.inputs.target_url }}"
           curl -X POST https://sync.impacta.id/webhook-test/github-screenshot \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
             -F "status=completed" \
             -F "target_url=$TARGET_URL" \
             -F "image=@screenshot.png"
